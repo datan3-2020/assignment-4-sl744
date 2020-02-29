@@ -1,29 +1,22 @@
 Statistical assignment 4
 ================
-\[add your name here\]
-\[add date here\]
+Simone Long\_135288
+29/02/2020
 
-In this assignment you will need to reproduce 5 ggplot graphs. I supply graphs as images; you need to write the ggplot2 code to reproduce them and knit and submit a Markdown document with the reproduced graphs (as well as your .Rmd file).
+``` r
+setwd("C:/Users/simon/OneDrive/Documents/datan3_2019")
 
-First we will need to open and recode the data. I supply the code for this; you only need to change the file paths.
-
-    ```r
-    library(tidyverse)
-    Data8 <- read_tsv("C:\\Users\\ab789\\datan3_2019\\data\\UKDA-6614-tab\\tab\\ukhls_w8\\h_indresp.tab")
-
-    Data8 <- Data8 %>%
+library(tidyverse)
+Data8 <- read_tsv("data/UKDA-6614-tab/tab/ukhls_w8/h_indresp.tab")
+Data8 <- Data8 %>%
         select(pidp, h_age_dv, h_payn_dv, h_gor_dv)
-
-    Stable <- read_tsv("C:\\Users\\ab789\\datan3_2019\\data\\UKDA-6614-tab\\tab\\ukhls_wx\\xwavedat.tab")
-
-    Stable <- Stable %>%
+setwd("C:/Users/simon/OneDrive/Documents/datan3_2019")
+Stable <- read_tsv("data/UKDA-6614-tab/tab/ukhls_wx/xwavedat.tab")
+Stable <- Stable %>%
         select(pidp, sex_dv, ukborn, plbornc)
-
-    Data <- Data8 %>% left_join(Stable, "pidp")
-
-    rm(Data8, Stable)
-
-    Data <- Data %>%
+Data <- Data8 %>% left_join(Stable, "pidp")
+rm(Data8, Stable)
+Data <- Data %>%
         mutate(sex_dv = ifelse(sex_dv == 1, "male",
                            ifelse(sex_dv == 2, "female", NA))) %>%
         mutate(h_payn_dv = ifelse(h_payn_dv < 0, NA, h_payn_dv)) %>%
@@ -53,26 +46,113 @@ First we will need to open and recode the data. I supply the code for this; you 
                 plbornc == 24 ~ "Nigeria",
                 TRUE ~ "other")
         )
-    ```
-
-Reproduce the following graphs as close as you can. For each graph, write two sentences (not more!) describing its main message.
+```
 
 1.  Univariate distribution (20 points).
+    
+    ``` r
+    library(ggplot2)
+    Data %>%    
+    ggplot(aes(h_payn_dv)) + 
+    geom_freqpoly() +
+    xlab("Net Monthly Pay") +
+    ylab("Number of respondents")
+    ```
+    
+    ![](assignment4_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
-    ![](assignment4_myfiles/figure-markdown_github/unnamed-chunk-2-1.png)
+The median monthly pay of UK residents (among those who responded)
+appears to fall around £1500. Using this sample to generalise, we can
+assume that the majority of UK residents fall in a middle/working class
+income bracket.
 
-2.  Line chart (20 points). The lines show the non-parametric association between age and monthly earnings for men and women.
+2.  Line chart (20 points).
+    
+    ``` r
+    Data %>%
+    ggplot(aes(x = h_age_dv, y = h_payn_dv, group=sex_dv)) +
+    geom_smooth(aes(linetype=sex_dv), color="black") +
+    xlim(15, 65) +
+    xlab("Age")+
+    ylab("Monthly Earnings") +
+    labs(linetype="Sex")
+    ```
+    
+    ![](assignment4_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-    ![](assignment4_myfiles/figure-markdown_github/unnamed-chunk-3-1.png)
+Among this sample’s respondents, it seems that men tend to earn more
+than women. This disparity is particularly present between those aged 30
+and 50 (with a dramatic difference in monthly earnings), as competition
+for high-earning jobs tends to be fiercest among those in this age
+bracket.
 
 3.  Faceted bar chart (20 points).
+    
+    ``` r
+    #DONE
+    Data <- Data %>%
+    group_by(sex_dv) %>%   
+    mutate(medpay = median(h_payn_dv, na.rm = TRUE))
+    
+    Data %>%
+    drop_na(placeBorn, sex_dv) %>%
+    ggplot(aes(x = sex_dv, y = medpay)) +
+        geom_bar(stat = 'identity') +
+        facet_wrap( ~ placeBorn) +
+        ylim(0, 2000) +
+        xlab("Sex") +
+        ylab("Median monthly net pay")
+    ```
+    
+    ![](assignment4_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-    ![](assignment4_myfiles/figure-markdown_github/unnamed-chunk-4-1.png)
+There is no significant difference in the gender pay gap across
+different countries of origin. Men have a consistently higher median net
+monthly pay than women, highlighting the global epidemic of sexism in
+the working world.
 
 4.  Heat map (20 points).
+    
+    ``` r
+    #ARGH    
+     Data2 <- Data %>% 
+    group_by(h_gor_dv, placeBorn) %>%
+    mutate(meanage = mean(h_age_dv))
+    
+    Data2 %>%
+    drop_na(h_gor_dv, placeBorn) %>%
+    ggplot(aes(x = h_gor_dv, y = placeBorn, fill = meanage)) +
+    geom_tile(stat = 'identity') +
+    theme(axis.text.x = element_text(angle = 90)) +
+    xlab("Region") +
+    ylab("Country of Birth") +
+    labs(fill="Mean Age")
+    ```
+    
+    ![](assignment4_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-    ![](assignment4_myfiles/figure-markdown_github/unnamed-chunk-5-1.png)
+The average age of the population tends not to be significantly young or
+old relative to country of origin and region settled in in the UK. But
+it should be noted that the average age of those from Nigeria has a
+younger trend (i.e. below the age of 40), especially among those who
+have settled in Scotland, South West England and Yorkshire, with the
+oldest average coming from Jamaica and settling in Scotland.
 
 5.  Population pyramid (20 points).
+    
+    ``` r
+    Data %>%
+    ggplot(mapping = aes(x = h_age_dv, fill = sex_dv)) +
+        geom_bar(data=subset(Data, sex_dv == "female"))+
+        geom_bar(data=subset(Data, sex_dv == "male"), aes(y=..count..*(-1)))+
+         coord_flip() +
+        labs(fill="Sex") +
+        xlab("Age") +
+        ylab("n")
+    ```
+    
+    ![](assignment4_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-    ![](assignment4_myfiles/figure-markdown_github/unnamed-chunk-6-1.png)
+The age of the sample is fairly evenly distributed among men and women.
+There is, however, a marginally greater number of women sampled,
+especially those age 30-50.
