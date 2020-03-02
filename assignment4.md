@@ -89,13 +89,13 @@ bracket.
 3.  Faceted bar chart (20 points).
     
     ``` r
-    #DONE
-    Data <- Data %>%
-    group_by(sex_dv) %>%   
-    mutate(medpay = median(h_payn_dv, na.rm = TRUE))
+    Data2 <- Data %>%
+    select(placeBorn, sex_dv, h_payn_dv) %>%
+    group_by(placeBorn, sex_dv) %>%
+    summarise(medpay = median(h_payn_dv, na.rm = TRUE))
     
-    Data %>%
-    drop_na(placeBorn, sex_dv) %>%
+    Data2 %>%
+    drop_na(placeBorn, sex_dv) %>%    
     ggplot(aes(x = sex_dv, y = medpay)) +
         geom_bar(stat = 'identity') +
         facet_wrap( ~ placeBorn) +
@@ -106,20 +106,22 @@ bracket.
     
     ![](assignment4_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-There is no significant difference in the gender pay gap across
-different countries of origin. Men have a consistently higher median net
-monthly pay than women, highlighting the global epidemic of sexism in
-the working world.
+Based on this graph, it appears that pay tends to be consisent across
+various countries of origin, with the exception of those coming from
+Bangladesh and India who earn considerably less than those from other
+countries, and Ireland, which has people earning a lot more than even
+than those born in the UK. It should also be noted that the gender pay
+gap is consistent across all groups, meaning gender discrimination is
+not unique to one ethnic group.
 
 4.  Heat map (20 points).
     
     ``` r
-    #ARGH    
-     Data2 <- Data %>% 
+    Data3 <- Data %>% 
     group_by(h_gor_dv, placeBorn) %>%
     mutate(meanage = mean(h_age_dv))
     
-    Data2 %>%
+    Data3 %>%
     drop_na(h_gor_dv, placeBorn) %>%
     ggplot(aes(x = h_gor_dv, y = placeBorn, fill = meanage)) +
     geom_tile(stat = 'identity') +
@@ -143,16 +145,16 @@ oldest average coming from Jamaica and settling in Scotland.
     ``` r
     Data %>%
     ggplot(mapping = aes(x = h_age_dv, fill = sex_dv)) +
-        geom_bar(data=subset(Data, sex_dv == "female"))+
-        geom_bar(data=subset(Data, sex_dv == "male"), aes(y=..count..*(-1)))+
-         coord_flip() +
-        labs(fill="Sex") +
-        xlab("Age") +
-        ylab("n")
+    geom_bar(data=subset(Data, sex_dv == "female")) +
+    geom_bar(data=subset(Data, sex_dv == "male"), aes(y=..count..*(-1)))+
+    coord_flip() +
+    labs(fill="Sex") +
+    xlab("Age") +
+    ylab("n")
     ```
     
     ![](assignment4_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-The age of the sample is fairly evenly distributed among men and women.
-There is, however, a marginally greater number of women sampled,
-especially those age 30-50.
+The age of the sample is fairly evenly distributed among men and women,
+demonstrating that the UK is largely middle-aged. It also appears there
+are, on average, more women than men, especially those age 30-50.
